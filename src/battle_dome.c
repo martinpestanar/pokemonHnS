@@ -2414,7 +2414,8 @@ static void InitDomeTrainers(void)
         ivs = GetDomeTrainerMonIvs(DOME_TRAINERS[i].trainerId);
         for (j = 0; j < FRONTIER_PARTY_SIZE; j++)
         {
-            CalcDomeMonStats(gFacilityTrainerMons[DOME_MONS[i][j]].species,
+            u16 monSpecies = gFacilityTrainerMons[DOME_MONS[i][j]].species;
+            CalcDomeMonStats(monSpecies,
                              monLevel, ivs,
                              gFacilityTrainerMons[DOME_MONS[i][j]].evSpread,
                              gFacilityTrainerMons[DOME_MONS[i][j]].nature,
@@ -2426,7 +2427,6 @@ static void InitDomeTrainers(void)
             rankingScores[i] += statValues[STAT_SPDEF];
             rankingScores[i] += statValues[STAT_SPEED];
             rankingScores[i] += statValues[STAT_HP];
-            u16 monSpecies = gFacilityTrainerMons[DOME_MONS[i][j]].species;
             if ((gSaveBlock1Ptr->tx_Mode_Modern_Types == 0) 
                 && (monSpecies == SPECIES_ARBOK 
                 || monSpecies == SPECIES_PARASECT 
