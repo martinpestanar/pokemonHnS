@@ -1,0 +1,40 @@
+name: Build ROM
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libpng-dev
+
+      - name: Install devkitARM
+        uses: devkitpro/devkitarm-action@v1
+
+      - name: Build agbcc
+        run: |
+          git clone https://github.com/pret/agbcc
+          cd agbcc
+          ./build.sh
+          ./install.sh ..
+          cd ..
+
+      - name: Build ROM
+        run: |
+          make -j$(nproc)
+
+      - name: Upload GBA ROM
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokemonHnS
+          path: "*.gba"
