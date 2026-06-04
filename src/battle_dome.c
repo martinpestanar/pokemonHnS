@@ -2426,57 +2426,58 @@ static void InitDomeTrainers(void)
             rankingScores[i] += statValues[STAT_SPDEF];
             rankingScores[i] += statValues[STAT_SPEED];
             rankingScores[i] += statValues[STAT_HP];
+            u16 monSpecies = gFacilityTrainerMons[DOME_MONS[i][j]].species;
             if ((gSaveBlock1Ptr->tx_Mode_Modern_Types == 0) 
-                && (species == SPECIES_ARBOK 
-                || species == SPECIES_PARASECT 
-                || species == SPECIES_GOLDUCK
-                || species == SPECIES_KINGLER
-                || species == SPECIES_MEGANIUM
-                || species == SPECIES_TYPHLOSION
-                || species == SPECIES_FERALIGATR
-                || species == SPECIES_NOCTOWL
-                || species == SPECIES_SUNFLORA
-                || species == SPECIES_STANTLER
-                || species == SPECIES_GROVYLE
-                || species == SPECIES_SCEPTILE
-                || species == SPECIES_MASQUERAIN
-                || species == SPECIES_DELCATTY
-                || species == SPECIES_GULPIN
-                || species == SPECIES_SWALOT
-                || species == SPECIES_LUVDISC
-                || species == SPECIES_ELECTIVIRE))
+                && (monSpecies == SPECIES_ARBOK 
+                || monSpecies == SPECIES_PARASECT 
+                || monSpecies == SPECIES_GOLDUCK
+                || monSpecies == SPECIES_KINGLER
+                || monSpecies == SPECIES_MEGANIUM
+                || monSpecies == SPECIES_TYPHLOSION
+                || monSpecies == SPECIES_FERALIGATR
+                || monSpecies == SPECIES_NOCTOWL
+                || monSpecies == SPECIES_SUNFLORA
+                || monSpecies == SPECIES_STANTLER
+                || monSpecies == SPECIES_GROVYLE
+                || monSpecies == SPECIES_SCEPTILE
+                || monSpecies == SPECIES_MASQUERAIN
+                || monSpecies == SPECIES_DELCATTY
+                || monSpecies == SPECIES_GULPIN
+                || monSpecies == SPECIES_SWALOT
+                || monSpecies == SPECIES_LUVDISC
+                || monSpecies == SPECIES_ELECTIVIRE))
                 {
                     monTypesBits |= gBitTable[gSpeciesInfo[gFacilityTrainerMons[DOME_MONS[i][j]].species].types_old[0]];
                     monTypesBits |= gBitTable[gSpeciesInfo[gFacilityTrainerMons[DOME_MONS[i][j]].species].types_old[1]];
                 }
             else if ((gSaveBlock1Ptr->tx_Mode_Fairy_Types == 0) 
-                && (species == SPECIES_JIGGLYPUFF 
-                || species == SPECIES_WIGGLYTUFF
-                || species == SPECIES_CLEFAIRY
-                || species == SPECIES_CLEFABLE
-                || species == SPECIES_MR_MIME
-                || species == SPECIES_CLEFFA
-                || species == SPECIES_IGGLYBUFF
-                || species == SPECIES_TOGEPI
-                || species == SPECIES_TOGETIC
-                || species == SPECIES_MARILL
-                || species == SPECIES_AZUMARILL
-                || species == SPECIES_SNUBBULL
-                || species == SPECIES_GRANBULL
-                || species == SPECIES_RALTS
-                || species == SPECIES_KIRLIA
-                || species == SPECIES_GARDEVOIR
-                || species == SPECIES_AZURILL
-                || species == SPECIES_MAWILE
-                || species == SPECIES_MIME_JR
-                || species == SPECIES_TOGEKISS))
+                && (monSpecies == SPECIES_JIGGLYPUFF 
+                || monSpecies == SPECIES_WIGGLYTUFF
+                || monSpecies == SPECIES_CLEFAIRY
+                || monSpecies == SPECIES_CLEFABLE
+                || monSpecies == SPECIES_MR_MIME
+                || monSpecies == SPECIES_CLEFFA
+                || monSpecies == SPECIES_IGGLYBUFF
+                || monSpecies == SPECIES_TOGEPI
+                || monSpecies == SPECIES_TOGETIC
+                || monSpecies == SPECIES_MARILL
+                || monSpecies == SPECIES_AZUMARILL
+                || monSpecies == SPECIES_SNUBBULL
+                || monSpecies == SPECIES_GRANBULL
+                || monSpecies == SPECIES_RALTS
+                || monSpecies == SPECIES_KIRLIA
+                || monSpecies == SPECIES_GARDEVOIR
+                || monSpecies == SPECIES_AZURILL
+                || monSpecies == SPECIES_MAWILE
+                || monSpecies == SPECIES_MIME_JR
+                || monSpecies == SPECIES_TOGEKISS))
                 {
                     monTypesBits |= gBitTable[gSpeciesInfo[gFacilityTrainerMons[DOME_MONS[i][j]].species].types_old[0]];
                     monTypesBits |= gBitTable[gSpeciesInfo[gFacilityTrainerMons[DOME_MONS[i][j]].species].types_old[1]];
                 }
             else if ((gSaveBlock1Ptr->tx_Mode_Fairy_Types == 1) 
-                && (species == SPECIES_SNUBBULL 
-                || species == SPECIES_GRANBULL))
+                && (monSpecies == SPECIES_SNUBBULL 
+                || monSpecies == SPECIES_GRANBULL))
                 {
                     monTypesBits |= gBitTable[gSpeciesInfo[gFacilityTrainerMons[DOME_MONS[i][j]].species].types_new[0]];
                     monTypesBits |= gBitTable[gSpeciesInfo[gFacilityTrainerMons[DOME_MONS[i][j]].species].types_new[1]];
