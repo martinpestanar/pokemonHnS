@@ -870,11 +870,15 @@ static bool8 ShouldUseItem(void)
         if (item == ITEM_NONE)
             continue;
         if (gSaveBlock1Ptr->tx_Mode_New_Citrus == 0)
+        {
             if (gItemEffectTable_OldSitrus[item - ITEM_POTION] == NULL)
                 continue;
+        }
         else if (gSaveBlock1Ptr->tx_Mode_New_Citrus == 1)
+        {
             if (gItemEffectTable[item - ITEM_POTION] == NULL)
                 continue;
+        }
 
         if (item == ITEM_ENIGMA_BERRY)
             itemEffects = gSaveBlock1Ptr->enigmaBerry.itemEffect;
