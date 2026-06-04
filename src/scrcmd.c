@@ -1649,16 +1649,16 @@ bool8 ScrCmd_showmonpic(struct ScriptContext *ctx)
     u8 y = ScriptReadByte(ctx);
 
     // Needed for starter randomization
-    if (((gSaveBlock1Ptr->tx_Random_Starter) == 1) && (FlagGet(FLAG_SYS_POKEMON_GET) == FALSE) ||
-        IsOneTypeChallengeActive() && (FlagGet(FLAG_SYS_POKEMON_GET) == FALSE))
+    if ((((gSaveBlock1Ptr->tx_Random_Starter) == 1) && (FlagGet(FLAG_SYS_POKEMON_GET) == FALSE)) ||
+        (IsOneTypeChallengeActive() && (FlagGet(FLAG_SYS_POKEMON_GET) == FALSE)))
     {
         // copies random starter species into VAR_TEMP_2
         species = GetStarterPokemon(VarGet(VAR_STARTER_MON));
         if (IsOneTypeChallengeActive() && (gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_DRAGON) && (species == 0))
             VarSet(VAR_TEMP_2, SPECIES_DRATINI);
         else if (IsOneTypeChallengeActive() 
-        && ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_NORMAL) || (gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_FAIRY)  
-        && (species == SPECIES_TOGEPI)))
+        && ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_NORMAL) || ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_FAIRY)  
+        && (species == SPECIES_TOGEPI))))
             VarSet(VAR_TEMP_2, SPECIES_CLEFFA);
         else if ((gSaveBlock1Ptr->tx_Random_Starter == TRUE) && (species == SPECIES_TOGEPI))
             VarSet(VAR_TEMP_2, SPECIES_CLEFFA);
@@ -1668,8 +1668,8 @@ bool8 ScrCmd_showmonpic(struct ScriptContext *ctx)
     if (IsOneTypeChallengeActive() && (gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_DRAGON) && (species == 0))
         ScriptMenu_ShowPokemonPic(SPECIES_DRATINI, x, y);
     else if (IsOneTypeChallengeActive() 
-    && ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_NORMAL) || (gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_FAIRY)  
-    && (species == SPECIES_TOGEPI)))
+    && ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_NORMAL) || ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_FAIRY)  
+    && (species == SPECIES_TOGEPI))))
         ScriptMenu_ShowPokemonPic(SPECIES_CLEFFA, x, y);
     else if ((gSaveBlock1Ptr->tx_Random_Starter == TRUE) && (species == SPECIES_TOGEPI))
         ScriptMenu_ShowPokemonPic(SPECIES_CLEFFA, x, y);
@@ -2644,9 +2644,10 @@ bool8 ScrCmd_warpwhitefade(struct ScriptContext *ctx)
 bool8 ScrCmd_checkpartymonlevel(struct ScriptContext *ctx)
 {
     u16 speciesLook = VarGet(ScriptReadHalfword(ctx));
+    struct Pokemon *pokemon;
 
     gSpecialVar_Result = PARTY_SIZE;
-    struct Pokemon *pokemon = &gPlayerParty[gSpecialVar_0x8004];
+    pokemon = &gPlayerParty[gSpecialVar_0x8004];
     if (GetMonData(pokemon, MON_DATA_LEVEL) == 100) 
         gSpecialVar_Result = TRUE;
     else
@@ -2716,6 +2717,7 @@ bool8 ScrCmd_remove5mons(struct ScriptContext *ctx)
 {
     // Remove all Pokémon from slots 2 to 6 (party indices 1 to 5)
     u8 removedCount = 0;
+    u8 i;
 
 
     if (GetMonData(&gPlayerParty[0], MON_DATA_HP) == 0)
@@ -2731,7 +2733,7 @@ bool8 ScrCmd_remove5mons(struct ScriptContext *ctx)
     } 
 
 
-    for (u8 i = 1; i < PARTY_SIZE; i++)
+    for (i = 1; i < PARTY_SIZE; i++)
     {
         if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) != SPECIES_NONE)
         {
@@ -2757,10 +2759,13 @@ bool8 ScrCmd_remove5mons(struct ScriptContext *ctx)
 static u32 MakeShinyPidWithNature(u16 tid, u16 sid, u8 nature)
 {
     const u16 s = tid ^ sid;
-    for (u32 lo = 0; lo < 65536; lo++)
+    u32 lo;
+    u16 hi;
+    u32 pid;
+    for (lo = 0; lo < 65536; lo++)
     {
-        u16 hi = s ^ (u16)lo;                 // ensures (tid ^ sid ^ hi ^ lo) == 0 → shiny
-        u32 pid = ((u32)hi << 16) | (u32)lo;  // full PID
+        hi = s ^ (u16)lo;                 // ensures (tid ^ sid ^ hi ^ lo) == 0 → shiny
+        pid = ((u32)hi << 16) | (u32)lo;  // full PID
         if (pid % 25 == nature)               // match desired nature
             return pid;
     }
@@ -2781,6 +2786,11 @@ bool8 ScrCmd_givenamedmon(struct ScriptContext *ctx)
     const u8 *otName;
     u8 heldItem[2];
     u8 mailIndex = 0;
+    u32 fullId;
+    u16 tid;
+    u16 sid;
+    u8 i;
+    u16 dexNum;
 
     static const u8 sKenyaNickname[] = _("KENYA");
     static const u8 sKenyaOtName[]   = _("RUDY");
@@ -2840,12 +2850,12 @@ bool8 ScrCmd_givenamedmon(struct ScriptContext *ctx)
         otName   = gSaveBlock2Ptr->playerName;
 
         // Build full 32-bit Trainer ID (TID|SID)
-        u32 fullId = ((u32)gSaveBlock2Ptr->playerTrainerId[3] << 24)
-                   | ((u32)gSaveBlock2Ptr->playerTrainerId[2] << 16)
-                   | ((u32)gSaveBlock2Ptr->playerTrainerId[1] <<  8)
-                   | ((u32)gSaveBlock2Ptr->playerTrainerId[0]);
-        u16 tid = (u16)(fullId & 0xFFFF);
-        u16 sid = (u16)(fullId >> 16);
+        fullId = ((u32)gSaveBlock2Ptr->playerTrainerId[3] << 24)
+               | ((u32)gSaveBlock2Ptr->playerTrainerId[2] << 16)
+               | ((u32)gSaveBlock2Ptr->playerTrainerId[1] <<  8)
+               | ((u32)gSaveBlock2Ptr->playerTrainerId[0]);
+        tid = (u16)(fullId & 0xFFFF);
+        sid = (u16)(fullId >> 16);
 
         // Make a shiny, Adamant PID for this TID/SID
         personality = MakeShinyPidWithNature(tid, sid, NATURE_ADAMANT);
@@ -2861,7 +2871,7 @@ bool8 ScrCmd_givenamedmon(struct ScriptContext *ctx)
     heldItem[0] = item & 0xFF;
     heldItem[1] = item >> 8;
 
-    for (u8 i = 0; i < PARTY_SIZE; i++)
+    for (i = 0; i < PARTY_SIZE; i++)
     {
         if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
         {
@@ -2905,7 +2915,7 @@ bool8 ScrCmd_givenamedmon(struct ScriptContext *ctx)
 
             CalculateMonStats(mon);
 
-            u16 dexNum = SpeciesToNationalPokedexNum(species);
+            dexNum = SpeciesToNationalPokedexNum(species);
             HandleSetPokedexFlag(dexNum, FLAG_SET_SEEN, personality);
             HandleSetPokedexFlag(dexNum, FLAG_SET_CAUGHT, personality);
 
@@ -2922,6 +2932,11 @@ bool8 ScrCmd_removenamedmon(struct ScriptContext *ctx)
 {
     u16 giftId = ScriptReadHalfword(ctx);
     const u8 *targetNickname;
+    u8 partyCount;
+    u8 i;
+    u8 nickname[POKEMON_NAME_LENGTH + 1];
+    u16 heldItem;
+    u8 friendship;
 
     static const u8 sKenyaNickname[]   = _("KENYA");
     static const u8 sShuckieNickname[] = _("SHUCKIE");
@@ -2939,8 +2954,8 @@ bool8 ScrCmd_removenamedmon(struct ScriptContext *ctx)
         return FALSE;
     }
 
-    u8 partyCount = 0;
-    for (u8 i = 0; i < PARTY_SIZE; i++)
+    partyCount = 0;
+    for (i = 0; i < PARTY_SIZE; i++)
     {
         if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) != SPECIES_NONE)
             partyCount++;
@@ -2952,16 +2967,15 @@ bool8 ScrCmd_removenamedmon(struct ScriptContext *ctx)
         return FALSE;
     }
 
-    for (u8 i = 0; i < PARTY_SIZE; i++)
+    for (i = 0; i < PARTY_SIZE; i++)
     {
         if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) != SPECIES_NONE)
         {
-            u8 nickname[POKEMON_NAME_LENGTH + 1];
             GetMonData(&gPlayerParty[i], MON_DATA_NICKNAME, nickname);
 
             if (StringCompare(nickname, targetNickname) == 0)
             {
-                u16 heldItem = GetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM);
+                heldItem = GetMonData(&gPlayerParty[i], MON_DATA_HELD_ITEM);
 
                 if (giftId == 1 && !ItemIsMail(heldItem)) // Only Kenya must hold mail
                 {
@@ -2971,7 +2985,7 @@ bool8 ScrCmd_removenamedmon(struct ScriptContext *ctx)
 
                 if (giftId == 2)
                 {
-                    u8 friendship = GetMonData(&gPlayerParty[i], MON_DATA_FRIENDSHIP);
+                    friendship = GetMonData(&gPlayerParty[i], MON_DATA_FRIENDSHIP);
                     if (friendship > 200)
                     {
                         gSpecialVar_Result = 3;
@@ -2995,6 +3009,9 @@ bool8 ScrCmd_removegenericmon(struct ScriptContext *ctx)
 {
     u16 targetSpecies = ScriptReadHalfword(ctx);
     u8 monIndex = VarGet(VAR_0x8004);
+    struct Pokemon *mon;
+    u16 species;
+    u8 level;
 
     if (monIndex >= PARTY_SIZE)
     {
@@ -3002,8 +3019,8 @@ bool8 ScrCmd_removegenericmon(struct ScriptContext *ctx)
         return FALSE;
     }
 
-    struct Pokemon *mon = &gPlayerParty[monIndex];
-    u16 species = GetMonData(mon, MON_DATA_SPECIES);
+    mon = &gPlayerParty[monIndex];
+    species = GetMonData(mon, MON_DATA_SPECIES);
 
     if (species == SPECIES_NONE || species != targetSpecies)
     {
@@ -3014,7 +3031,7 @@ bool8 ScrCmd_removegenericmon(struct ScriptContext *ctx)
     // Special condition: Magikarp at level 100
     if (species == SPECIES_MAGIKARP)
     {
-        u8 level = GetMonData(mon, MON_DATA_LEVEL);
+        level = GetMonData(mon, MON_DATA_LEVEL);
         if (level == 100)
         {
             ZeroMonData(mon);
@@ -3155,7 +3172,8 @@ static const u8 sOddEggShinyNameList[][PLAYER_NAME_LENGTH + 1] = {
 
 static bool8 IsPlayerNameInShinyList(void)
 {
-    for (u32 i = 0; i < ARRAY_COUNT(sOddEggShinyNameList); i++)
+    u32 i;
+    for (i = 0; i < ARRAY_COUNT(sOddEggShinyNameList); i++)
     {
         if (StringCompare(gSaveBlock2Ptr->playerName, sOddEggShinyNameList[i]) == 0)
             return TRUE;
@@ -3197,22 +3215,30 @@ static u32 GetPlayerOtId32(void)
 
 static bool8 GiveOddEgg_Internal(u16 species, bool8 forceShiny, bool8 allow14PercentShiny)
 {
+    u8 i;
+    struct Pokemon *mon;
+    u32 otId;
+    bool8 makeShiny;
+    u32 pid;
+    bool8 isEgg;
+    u8 cycles;
+
     // Find a free party slot
-    for (u8 i = 0; i < PARTY_SIZE; i++)
+    for (i = 0; i < PARTY_SIZE; i++)
     {
         if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES) == SPECIES_NONE)
         {
-            struct Pokemon *mon = &gPlayerParty[i];
+            mon = &gPlayerParty[i];
             ZeroMonData(mon);
 
             // Decide shiny / personality
-            u32 otId = GetPlayerOtId32();
-            bool8 makeShiny = forceShiny;
+            otId = GetPlayerOtId32();
+            makeShiny = forceShiny;
             if (!makeShiny && allow14PercentShiny) {
                 // 14% chance
                 makeShiny = ((Random() % 100) < 14);
             }
-            u32 pid = makeShiny ? MakeShinyPidForOt(otId) : MakeNonShinyPidForOt(otId);
+            pid = makeShiny ? MakeShinyPidForOt(otId) : MakeNonShinyPidForOt(otId);
 
             // Create as player's mon with fixed PID; IVs random.
             // Level for eggs is arbitrary; 5 is conventional.
@@ -3220,11 +3246,11 @@ static bool8 GiveOddEgg_Internal(u16 species, bool8 forceShiny, bool8 allow14Per
             #define ODD_EGG_START_CYCLES 2
             // Mark as egg + set cycles
             {
-                bool8 isEgg = TRUE;
+                isEgg = TRUE;
                 SetMonData(mon, MON_DATA_IS_EGG, &isEgg);
             }
             {
-                u8 cycles = gSpeciesInfo[species].eggCycles;
+                cycles = gSpeciesInfo[species].eggCycles;
                 if (cycles > ODD_EGG_START_CYCLES)
                     cycles = ODD_EGG_START_CYCLES;   // clamp down to "near hatch"
                 // If the species already has fewer cycles than the target, keep its lower value.
@@ -3246,19 +3272,21 @@ static bool8 GiveOddEgg_Internal(u16 species, bool8 forceShiny, bool8 allow14Per
 // Returns: gSpecialVar_Result = MON_GIVEN_TO_PARTY or MON_CANT_GIVE
 bool8 ScrCmd_giveoddegg(struct ScriptContext *ctx)
 {
+    u16 species;
+    bool8 forceShiny;
     u16 which = VarGet(ScriptReadHalfword(ctx));   // support immediate or VAR
     if (which == 0 || which >= ARRAY_COUNT(sOddEggSpecies)) {
         gSpecialVar_Result = MON_CANT_GIVE;
         return FALSE;
     }
 
-    u16 species = sOddEggSpecies[which];
+    species = sOddEggSpecies[which];
     if (species == SPECIES_NONE) {
         gSpecialVar_Result = MON_CANT_GIVE;
         return FALSE;
     }
 
-    bool8 forceShiny = IsPlayerNameInShinyList();
+    forceShiny = IsPlayerNameInShinyList();
     (void)GiveOddEgg_Internal(species, forceShiny, TRUE);
     return FALSE;
 }
