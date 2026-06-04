@@ -1793,8 +1793,8 @@ bool8 ScrCmd_buffermoncategory(struct ScriptContext *ctx)
         StringCopy(sScriptStringVars[stringVarIndex], GetPokedexCategoryName(SpeciesToNationalPokedexNum(SPECIES_DRATINI)));
     }
     else if (IsOneTypeChallengeActive() 
-    && ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_NORMAL) || (gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_FAIRY)  
-    && (species == SPECIES_TOGEPI)))
+    && ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_NORMAL) || ((gSaveBlock1Ptr->tx_Challenges_OneTypeChallenge == TYPE_FAIRY)  
+    && (species == SPECIES_TOGEPI))))
     {
         VarSet(VAR_TEMP_2, SPECIES_CLEFFA);
         StringCopy(sScriptStringVars[stringVarIndex], GetPokedexCategoryName(SpeciesToNationalPokedexNum(SPECIES_CLEFFA)));
