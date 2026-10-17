@@ -51,9 +51,20 @@ jobs:
       - name: Deploy to Supabase Storage (roms bucket)
         run: |
           echo "Uploading pokemonHnS.gba to Supabase Storage..."
-          curl -f -X POST "${{ secrets.SUPABASE_URL }}/storage/v1/object/roms/pokemonHnS.gba" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          # Usar SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (o fallback a los valores del proyecto de Cyber-Johto)
+          SB_URL="${{ secrets.SUPABASE_URL }}"
+          if [ -z "$SB_URL" ]; then
+            SB_URL="https://hywlytsbogbassecflbw.supabase.co"
+          fi
+          
+          SB_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          if [ -z "$SB_KEY" ]; then
+            SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5d2x5dHNib2diYXNzZWNmbGJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM4MjY4MywiZXhwIjoyMDg5OTU4NjgzfQ.3xar2lr0GSK3TjKVPG-kyuN2_0uougk2EHsv52-lzc4"
+          fi
+
+          curl -f -X POST "${SB_URL}/storage/v1/object/roms/pokemonHnS.gba" \
+            -H "Authorization: Bearer ${SB_KEY}" \
+            -H "apikey: ${SB_KEY}" \
             -H "Content-Type: application/octet-stream" \
             -H "x-upsert: true" \
             --data-binary "@pokemonHnS.gba"
