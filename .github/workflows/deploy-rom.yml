@@ -1,0 +1,60 @@
+name: Build and Deploy pokemonHnS ROM
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build tools and dependencies
+        run: |
+          apt-get update
+          apt-get install -y libpng-dev curl jq
+
+      - name: Build agbcc compiler
+        run: |
+          git clone https://github.com/pret/agbcc
+          cd agbcc
+          ./build.sh
+          ./install.sh ..
+          cd ..
+
+      - name: Compile pokemonHnS GBA ROM
+        run: |
+          make -j$(nproc) modern
+
+      - name: Verify compiled ROM binary
+        run: |
+          if [ -f "pokemonHnS.gba" ]; then
+            echo "SUCCESS: pokemonHnS.gba exists ($(stat -c%s pokemonHnS.gba) bytes)"
+          elif [ -f "pokeemerald.gba" ]; then
+            echo "Renaming pokeemerald.gba to pokemonHnS.gba"
+            cp pokeemerald.gba pokemonHnS.gba
+          else
+            echo "ERROR: ROM binary not found!"
+            exit 1
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokemonHnS-rom
+          path: pokemonHnS.gba
+
+      - name: Deploy to Supabase Storage (roms bucket)
+        run: |
+          echo "Uploading pokemonHnS.gba to Supabase Storage..."
+          curl -f -X POST "${{ secrets.SUPABASE_URL }}/storage/v1/object/roms/pokemonHnS.gba" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/octet-stream" \
+            -H "x-upsert: true" \
+            --data-binary "@pokemonHnS.gba"
+          echo "Deployment to Supabase Storage completed successfully!"
