@@ -17,19 +17,11 @@ jobs:
       - name: Install system dependencies
         run: |
           apt-get update
-          apt-get install -y libpng-dev
+          apt-get install -y libpng-dev build-essential
 
-      - name: Build agbcc
+      - name: Build ROM (Modern GCC)
         run: |
-          git clone https://github.com/pret/agbcc
-          cd agbcc
-          ./build.sh
-          ./install.sh ..
-          cd ..
-
-      - name: Build ROM
-        run: |
-          make -j$(nproc)
+          make modern -j$(nproc)
 
       - name: Upload GBA ROM
         uses: actions/upload-artifact@v4

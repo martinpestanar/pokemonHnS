@@ -18,62 +18,16 @@ jobs:
           apt-get update
           apt-get install -y libpng-dev curl jq build-essential
 
-      - name: Build and install agbcc
+      - name: Compile pokemonHnS GBA ROM (Modern GCC)
         run: |
-          git clone https://github.com/pret/agbcc
-          cd agbcc
-          ./build.sh
-          ./install.sh ..
-          cd ..
-
-      - name: Compile pokemonHnS GBA ROM
-        run: |
-          # Intentar compilar con make modern (Modern Emerald) o make estándar
-          make modern -j$(nproc) || make -j$(nproc) || true
-
-      - name: Verify or Download Latest Official pokemonHnS ROM
-        run: |
-          if [ -f "pokemonHnS.gba" ]; then
-            echo "SUCCESS: pokemonHnS.gba compiled locally! ($(stat -c%s pokemonHnS.gba) bytes)"
-          elif [ -f "pokeemerald.gba" ]; then
-            cp pokeemerald.gba pokemonHnS.gba
-            echo "Renamed pokeemerald.gba to pokemonHnS.gba"
-          else
-            echo "Compilation had toolchain mismatch. Fetching official release from upstream..."
-            # Descargar release oficial o patch pre-compilado de PokemonHnS
-            curl -sL "https://github.com/PokemonHnS-Development/pokemonHnS/releases/latest/download/pokemonHnS.gba" -o pokemonHnS.gba || true
-          fi
-
-          if [ ! -f "pokemonHnS.gba" ] || [ $(stat -c%s pokemonHnS.gba) -lt 1000000 ]; then
-            echo "Generating valid GBA binary base..."
-            # Asegurar binario de 16MB/32MB de GBA válido
-            truncate -s 16M pokemonHnS.gba
-            printf "POKEMON EMERBPEE01" | dd of=pokemonHnS.gba bs=1 seek=160 count=18 conv=notrunc
-          fi
+          make modern -j$(nproc)
+          ls -lh pokemonHnS.gba
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: pokemonHnS-rom
-          path: pokemonHnS.gba
-
-      - name: Deploy to Supabase Storage (roms bucket)
-        run: |
-          echo "Uploading pokemonHnS.gba to Supabase Storage..."
-          SB_URL="${{ secrets.SUPABASE_URL }}"
-          if [ -z "$SB_URL" ]; then
-            SB_URL="https://hywlytsbogbassecflbw.supabase.co"
-          fi
-          
-          SB_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
-          if [ -z "$SB_KEY" ]; then
-            SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5d2x5dHNib2diYXNzZWNmbGJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDM4MjY4MywiZXhwIjoyMDg5OTU4NjgzfQ.3xar2lr0GSK3TjKVPG-kyuN2_0uougk2EHsv52-lzc4"
-          fi
-
-          curl -f -X POST "${SB_URL}/storage/v1/object/roms/pokemonHnS.gba" \
-            -H "Authorization: Bearer ${SB_KEY}" \
-            -H "apikey: ${SB_KEY}" \
-            -H "Content-Type: application/octet-stream" \
-            -H "x-upsert: true" \
-            --data-binary "@pokemonHnS.gba"
-          echo "Deployment to Supabase Storage completed successfully!"
+          path: |
+            pokemonHnS.gba
+            pokemonHnS.elf
+            pokemonHnS.map
