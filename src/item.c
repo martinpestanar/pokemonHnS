@@ -945,14 +945,18 @@ u16 ItemId_GetId(u16 itemId)
 
 u16 ItemId_GetPrice(u16 itemId)
 {
-    if (gSaveBlock1Ptr->tx_Challenges_Expensive == 0)
-        return gItems[SanitizeItemId(itemId)].price;
-    else if (gSaveBlock1Ptr->tx_Challenges_Expensive == 1)
-        return gItems[SanitizeItemId(itemId)].price * 5;
-    else if (gSaveBlock1Ptr->tx_Challenges_Expensive == 2)
-        return gItems[SanitizeItemId(itemId)].price * 10;
-    else if (gSaveBlock1Ptr->tx_Challenges_Expensive == 3)
-        return gItems[SanitizeItemId(itemId)].price * 50;
+    u32 basePrice = gItems[SanitizeItemId(itemId)].price;
+    u32 inflatedPrice;
+
+    if (basePrice == 0)
+        return 0;
+
+    // SynDex Economy v2: PokéMart Hyperinflation (x50) so App Bazar is the main shop
+    inflatedPrice = basePrice * 50;
+    if (inflatedPrice > 60000)
+        inflatedPrice = 60000;
+
+    return (u16)inflatedPrice;
 }
 
 u8 ItemId_GetHoldEffect(u16 itemId)

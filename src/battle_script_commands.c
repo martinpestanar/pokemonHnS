@@ -6385,6 +6385,25 @@ static u32 GetTrainerMoneyToGive(u16 trainerId)
             moneyReward = 4 * lastMonLevel * gBattleStruct->moneyMultiplier * 2 * gTrainerMoneyTable[i].value;
         else
             moneyReward = 4 * lastMonLevel * gBattleStruct->moneyMultiplier * gTrainerMoneyTable[i].value;
+
+        // SynDex Economy v2: Unified Currency Calibration & Incremental 5-Min Rematch Payout
+        if (IsScalableRouteTrainer(trainerId))
+        {
+            u8 tier = GetNpcRematchTier(trainerId);
+            u32 baseUnified = (moneyReward / 8) + (lastMonLevel * 2);
+            if (baseUnified < 25)
+                baseUnified = 25;
+            if (baseUnified > 140)
+                baseUnified = 140;
+            moneyReward = baseUnified + (u32)(tier * 35);
+        }
+        else
+        {
+            // Bosses / Leaders / Rivals: calibrated high-value unified payout (400..1500 Pokedollars)
+            moneyReward = (moneyReward / 3) + 250;
+            if (moneyReward > 1800)
+                moneyReward = 1800;
+        }
     }
 
     return moneyReward;

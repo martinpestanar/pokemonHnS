@@ -120,6 +120,136 @@ EWRAM_DATA u8 NuzlockeIsCaptureBlocked = FALSE;
 EWRAM_DATA u8 NuzlockeIsSpeciesClauseActive = FALSE;
 EWRAM_DATA u8 OneTypeChallengeCaptureBlocked = FALSE;
 
+// SynDex Economy v2: 5-Minute NPC Cooldown & Incremental Scaling Tracker
+#define MAX_TRACKED_NPCS 64
+#define NPC_REMATCH_COOLDOWN_SECONDS 300
+#define MAX_NPC_REMATCH_TIER 5
+
+struct NpcScalableRematch
+{
+    u16 trainerId;
+    u8 rematchTier;
+    u32 lastDefeatedSeconds;
+};
+
+EWRAM_DATA static struct NpcScalableRematch sNpcRematchTracker[MAX_TRACKED_NPCS] = {0};
+
+static u32 GetTotalPlayTimeSeconds(void)
+{
+    return (u32)gSaveBlock2Ptr->playTimeHours * 3600
+         + (u32)gSaveBlock2Ptr->playTimeMinutes * 60
+         + (u32)gSaveBlock2Ptr->playTimeSeconds;
+}
+
+bool8 IsScalableRouteTrainer(u16 trainerId)
+{
+    u8 trainerClass;
+    if (trainerId == 0 || trainerId >= TRAINERS_COUNT)
+        return FALSE;
+
+    trainerClass = gTrainers[trainerId].trainerClass;
+    switch (trainerClass)
+    {
+    case TRAINER_CLASS_LEADER:
+    case TRAINER_CLASS_ELITE_FOUR:
+    case TRAINER_CLASS_CHAMPION:
+    case TRAINER_CLASS_RIVAL:
+    case TRAINER_CLASS_ROCKET_ADMIN:
+    case TRAINER_CLASS_TEAM_ROCKET:
+    case TRAINER_CLASS_AQUA_ADMIN:
+    case TRAINER_CLASS_AQUA_LEADER:
+    case TRAINER_CLASS_MAGMA_ADMIN:
+    case TRAINER_CLASS_MAGMA_LEADER:
+    case TRAINER_CLASS_MYSTERY_MAN:
+    case TRAINER_CLASS_KIMONO_GIRL:
+    case TRAINER_CLASS_PKMN_TRAINER_1:
+    case TRAINER_CLASS_PKMN_TRAINER_2:
+    case TRAINER_CLASS_RS_PROTAG:
+        return FALSE;
+    default:
+        return TRUE;
+    }
+}
+
+u8 GetNpcRematchTier(u16 trainerId)
+{
+    s32 i;
+    if (!IsScalableRouteTrainer(trainerId))
+        return 0;
+
+    for (i = 0; i < MAX_TRACKED_NPCS; i++)
+    {
+        if (sNpcRematchTracker[i].trainerId == trainerId)
+            return sNpcRematchTracker[i].rematchTier;
+    }
+    return 0;
+}
+
+static void RecordNpcDefeatForScaling(u16 trainerId)
+{
+    s32 i;
+    s32 emptySlot = -1;
+    u32 oldestTime = 0xFFFFFFFF;
+    s32 oldestSlot = 0;
+    u32 now;
+
+    if (!IsScalableRouteTrainer(trainerId))
+        return;
+
+    now = GetTotalPlayTimeSeconds();
+
+    for (i = 0; i < MAX_TRACKED_NPCS; i++)
+    {
+        if (sNpcRematchTracker[i].trainerId == trainerId)
+        {
+            if (sNpcRematchTracker[i].rematchTier < MAX_NPC_REMATCH_TIER)
+                sNpcRematchTracker[i].rematchTier++;
+            sNpcRematchTracker[i].lastDefeatedSeconds = now;
+            return;
+        }
+        if (emptySlot == -1 && sNpcRematchTracker[i].trainerId == 0)
+            emptySlot = i;
+        if (sNpcRematchTracker[i].lastDefeatedSeconds < oldestTime)
+        {
+            oldestTime = sNpcRematchTracker[i].lastDefeatedSeconds;
+            oldestSlot = i;
+        }
+    }
+
+    if (emptySlot == -1)
+        emptySlot = oldestSlot;
+
+    sNpcRematchTracker[emptySlot].trainerId = trainerId;
+    sNpcRematchTracker[emptySlot].rematchTier = 1;
+    sNpcRematchTracker[emptySlot].lastDefeatedSeconds = now;
+}
+
+static bool8 IsNpcRematchCooldownReady(u16 trainerId)
+{
+    s32 i;
+    u32 now;
+
+    if (!IsScalableRouteTrainer(trainerId))
+        return FALSE;
+
+    now = GetTotalPlayTimeSeconds();
+
+    for (i = 0; i < MAX_TRACKED_NPCS; i++)
+    {
+        if (sNpcRematchTracker[i].trainerId == trainerId)
+        {
+            if (now >= sNpcRematchTracker[i].lastDefeatedSeconds
+                && (now - sNpcRematchTracker[i].lastDefeatedSeconds) >= NPC_REMATCH_COOLDOWN_SECONDS)
+            {
+                return TRUE;
+            }
+            return FALSE;
+        }
+    }
+    // Beaten in an earlier session before tracker populated: ready for Tier 1 rematch
+    return TRUE;
+}
+
 // The first transition is used if the enemy Pokémon are lower level than our Pokémon.
 // Otherwise, the second transition is used.
 static const u8 sBattleTransitionTable_Wild[][2] =
@@ -1171,6 +1301,12 @@ u8 GetScaledLevel(u8 lvl)
     else if (gSaveBlock2Ptr->optionsDifficulty == 0)
         lvl -= levelScaling;
 
+    // SynDex Economy v2: Route NPCs start +3 levels stronger & gain +4 levels per rematch tier (up to +23 levels)
+    if (IsScalableRouteTrainer(gTrainerBattleOpponent_A))
+    {
+        lvl += 3 + (GetNpcRematchTier(gTrainerBattleOpponent_A) * 4);
+    }
+
     if (lvl > 100)
         lvl = 100;
     if (lvl < 1)
@@ -1792,7 +1928,19 @@ bool8 GetTrainerFlag(void)
     else if (InTrainerHill())
         return GetHillTrainerFlag(gSelectedObjectEvent);
     else
-        return FlagGet(GetTrainerAFlag());
+    {
+        bool8 fought = FlagGet(GetTrainerAFlag());
+        if (fought
+            && sTrainerBattleMode == TRAINER_BATTLE_SINGLE
+            && sTrainerABattleScriptRetAddr == NULL
+            && IsScalableRouteTrainer(gTrainerBattleOpponent_A)
+            && IsNpcRematchCooldownReady(gTrainerBattleOpponent_A))
+        {
+            FlagClear(GetTrainerAFlag());
+            return FALSE;
+        }
+        return fought;
+    }
 }
 
 static void SetBattledTrainersFlags(void)
@@ -1913,6 +2061,8 @@ static void CB2_EndTrainerBattle(void)
         {
             RegisterTrainerInMatchCall();
             SetBattledTrainersFlags();
+            if (sTrainerBattleMode == TRAINER_BATTLE_SINGLE && sTrainerABattleScriptRetAddr == NULL)
+                RecordNpcDefeatForScaling(gTrainerBattleOpponent_A);
         }
     }
 }

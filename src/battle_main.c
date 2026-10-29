@@ -2405,6 +2405,14 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+                if (IsScalableRouteTrainer(trainerNum))
+                {
+                    u8 tierIvBoost = 6 + (GetNpcRematchTier(trainerNum) * 5);
+                    if (fixedIV + tierIvBoost > MAX_PER_STAT_IVS)
+                        fixedIV = MAX_PER_STAT_IVS;
+                    else
+                        fixedIV += tierIvBoost;
+                }
                 //CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 if (gSaveBlock1Ptr->tx_Random_Trainer) //tx_randomizer_and_challenges
                 {
@@ -2424,6 +2432,14 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+                if (IsScalableRouteTrainer(trainerNum))
+                {
+                    u8 tierIvBoost = 6 + (GetNpcRematchTier(trainerNum) * 5);
+                    if (fixedIV + tierIvBoost > MAX_PER_STAT_IVS)
+                        fixedIV = MAX_PER_STAT_IVS;
+                    else
+                        fixedIV += tierIvBoost;
+                }
                 //CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
 
                 if (gSaveBlock1Ptr->tx_Random_Trainer) //tx_randomizer_and_challenges
@@ -2461,6 +2477,14 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+                if (IsScalableRouteTrainer(trainerNum))
+                {
+                    u8 tierIvBoost = 6 + (GetNpcRematchTier(trainerNum) * 5);
+                    if (fixedIV + tierIvBoost > MAX_PER_STAT_IVS)
+                        fixedIV = MAX_PER_STAT_IVS;
+                    else
+                        fixedIV += tierIvBoost;
+                }
                 //CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 if (gSaveBlock1Ptr->tx_Random_Trainer) //tx_randomizer_and_challenges
                 {
@@ -2528,6 +2552,14 @@ static u8 CreateNPCTrainerParty(struct Pokemon *party, u16 trainerNum, bool8 fir
 
                 personalityValue += nameHash << 8;
                 fixedIV = partyData[i].iv * MAX_PER_STAT_IVS / 255;
+                if (IsScalableRouteTrainer(trainerNum))
+                {
+                    u8 tierIvBoost = 6 + (GetNpcRematchTier(trainerNum) * 5);
+                    if (fixedIV + tierIvBoost > MAX_PER_STAT_IVS)
+                        fixedIV = MAX_PER_STAT_IVS;
+                    else
+                        fixedIV += tierIvBoost;
+                }
                 //CreateMon(&party[i], partyData[i].species, partyData[i].lvl, fixedIV, TRUE, personalityValue, OT_ID_RANDOM_NO_SHINY, 0);
                 if (gSaveBlock1Ptr->tx_Random_Trainer) //tx_randomizer_and_challenges
                 {

@@ -52,6 +52,8 @@ void BattleSetup_StartTrainerBattle(void);
 void BattleSetup_StartRematchBattle(void);
 void ShowTrainerIntroSpeech(void);
 u8 GetScaledLevel(u8 lvl);
+bool8 IsScalableRouteTrainer(u16 trainerId);
+u8 GetNpcRematchTier(u16 trainerId);
 const u8 *BattleSetup_GetScriptAddrAfterBattle(void);
 const u8 *BattleSetup_GetTrainerPostBattleScript(void);
 void ShowTrainerCantBattleSpeech(void);
